@@ -1,0 +1,19 @@
+<%-- 公共尾部：闭合侧边栏布局 + 一次性提示（flash） --%>
+<c:if test="${layout eq 'side'}"></main></div></c:if>
+<c:if test="${not empty sessionScope.flash}">
+    <div id="flashOk" data-msg="<c:out value='${sessionScope.flash}'/>" hidden></div>
+    <c:remove var="flash" scope="session"/>
+</c:if>
+<c:if test="${not empty sessionScope.flashError}">
+    <div id="flashErr" data-msg="<c:out value='${sessionScope.flashError}'/>" hidden></div>
+    <c:remove var="flashError" scope="session"/>
+</c:if>
+<script>
+    (function () {
+        var ok = document.getElementById('flashOk'), err = document.getElementById('flashErr');
+        if (ok) ZF.toast(ok.dataset.msg);
+        if (err) ZF.toast(err.dataset.msg, 'err');
+    })();
+</script>
+</body>
+</html>

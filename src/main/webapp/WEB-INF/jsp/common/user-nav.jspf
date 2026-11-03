@@ -1,0 +1,28 @@
+<%-- 用户端顶部导航。页面中先 <c:set var="nav" value="home|chat|kb|tickets"/>
+     OGNL 演示：#session.loginUser 读取 session 中的登录用户（等价于 EL 的 ${sessionScope.loginUser}） --%>
+<header class="u-header glass-strong">
+    <a href="${ctx}/user/home.action" class="logo"><%@ include file="logo.jspf" %><span class="name">智服 <b>AI</b></span></a>
+    <nav class="u-nav">
+        <a href="${ctx}/user/home.action" class="${nav eq 'home' ? 'active' : ''}"><i class="ri-home-smile-2-line"></i>帮助中心</a>
+        <a href="${ctx}/user/chat.action" class="${nav eq 'chat' ? 'active' : ''}"><i class="ri-robot-2-line"></i>智能客服</a>
+        <a href="${ctx}/user/kb.action" class="${nav eq 'kb' ? 'active' : ''}"><i class="ri-book-open-line"></i>知识库</a>
+        <a href="${ctx}/user/tickets.action" class="${nav eq 'tickets' ? 'active' : ''}"><i class="ri-coupon-3-line"></i>我的工单</a>
+    </nav>
+    <a class="btn btn-primary btn-sm" href="${ctx}/user/ticketNew.action"><i class="ri-add-line"></i>提交工单</a>
+    <div class="user-menu" tabindex="0">
+        <span class="avatar" style="background:${me.avatarColor}"><c:out value="${me.initial}"/></span>
+        <span class="meta"><b><s:property value="#session.loginUser.nickname"/></b><small><s:property value="#session.loginUser.roleText"/> · <s:property value="#session.loginUser.username"/></small></span>
+        <i class="ri-arrow-down-s-line muted"></i>
+        <div class="drop glass-strong">
+            <a href="${ctx}/user/tickets.action"><i class="ri-coupon-3-line"></i>我的工单</a>
+            <a href="${ctx}/user/chat.action"><i class="ri-history-line"></i>咨询记录</a>
+            <a href="${ctx}/logout.action"><i class="ri-logout-box-r-line"></i>退出登录</a>
+        </div>
+    </div>
+</header>
+<nav class="mobile-nav glass-strong">
+    <a href="${ctx}/user/home.action" class="${nav eq 'home' ? 'active' : ''}"><i class="ri-home-smile-2-line"></i>首页</a>
+    <a href="${ctx}/user/chat.action" class="${nav eq 'chat' ? 'active' : ''}"><i class="ri-robot-2-line"></i>客服</a>
+    <a href="${ctx}/user/kb.action" class="${nav eq 'kb' ? 'active' : ''}"><i class="ri-book-open-line"></i>知识库</a>
+    <a href="${ctx}/user/tickets.action" class="${nav eq 'tickets' ? 'active' : ''}"><i class="ri-coupon-3-line"></i>工单</a>
+</nav>

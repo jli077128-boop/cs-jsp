@@ -1,0 +1,6 @@
+<svg viewBox="0 0 48 48" aria-hidden="true">
+    <defs><linearGradient id="zf-logo-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f7cff"/><stop offset=".55" stop-color="#8b5cf6"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>
+    <path d="M24 4a20 20 0 1 0 12.6 35.5L44 44l-2.6-8.2A20 20 0 0 0 24 4z" fill="url(#zf-logo-g)"/>
+    <circle cx="17.5" cy="22" r="3" fill="#fff"/><circle cx="30.5" cy="22" r="3" fill="#fff"/>
+    <path d="M16 30q8 6 16 0" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

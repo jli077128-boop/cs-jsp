@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE validators PUBLIC
+        "-//Apache Struts//XWork Validator 1.0.3//EN"
+        "https://struts.apache.org/dtds/xwork-validator-1.0.3.dtd">
+<!--
+  RegisterAction 的声明式校验（对应课堂 02_strutsRegist）。
+  文件名规则：Action 类名-validation.xml，放在与 Action 同一个包下（Maven 项目放 src/main/resources 的同名包路径）。
+  字段名与表单一致：域模型接收，所以写 user.username、user.password ...
+  校验失败 → workflow 拦截器返回 input → register.jsp 用 <s:fielderror fieldName="..."/> 显示。
+-->
+<validators>
+    <field name="user.username">
+        <field-validator type="requiredstring" short-circuit="true">
+            <param name="trim">true</param>
+            <message>请填写账号</message>
+        </field-validator>
+        <field-validator type="regex">
+            <param name="regex"><![CDATA[^[A-Za-z0-9_]{4,20}$]]></param>
+            <message>账号需为 4-20 位字母、数字或下划线</message>
+        </field-validator>
+    </field>
+    <field name="user.nickname">
+        <field-validator type="stringlength">
+            <param name="maxLength">16</param>
+            <param name="trim">true</param>
+            <message>昵称不能超过 ${maxLength} 个字</message>
+        </field-validator>
+    </field>
+    <field name="user.phone">
+        <field-validator type="regex">
+            <param name="regex"><![CDATA[^1[3-9]\d{9}$]]></param>
+            <message>手机号格式不正确（11 位，以 1 开头）</message>
+        </field-validator>
+    </field>
+    <field name="user.password">
+        <field-validator type="requiredstring" short-circuit="true">
+            <param name="trim">false</param>
+            <message>请填写密码</message>
+        </field-validator>
+        <field-validator type="stringlength">
+            <param name="minLength">6</param>
+            <param name="maxLength">32</param>
+            <message>密码长度需为 ${minLength}-${maxLength} 位</message>
+        </field-validator>
+    </field>
+    <field name="confirm">
+        <field-validator type="requiredstring">
+            <param name="trim">false</param>
+            <message>请再次输入密码</message>
+        </field-validator>
+    </field>
+</validators>

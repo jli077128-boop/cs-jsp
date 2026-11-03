@@ -1,0 +1,26 @@
+<%-- 客服 / 管理员 侧边栏布局。页面中先 <c:set var="nav" .../>，结尾 include foot.jspf 时会自动闭合 --%>
+<c:set var="layout" value="side"/>
+<div class="admin-shell">
+    <aside class="sidebar glass-strong">
+        <a class="logo" href="${ctx}/"><%@ include file="logo.jspf" %><span class="name">智服 <b>AI</b></span></a>
+        <c:choose>
+            <c:when test="${me.role eq 'ADMIN'}">
+                <div class="group">运营管理</div>
+                <a class="side-link ${nav eq 'dashboard' ? 'active' : ''}" href="${ctx}/admin/dashboard.action"><i class="ri-dashboard-3-line"></i>数据看板</a>
+                <a class="side-link ${nav eq 'kb' ? 'active' : ''}" href="${ctx}/admin/kb.action"><i class="ri-book-shelf-line"></i>知识库管理</a>
+                <a class="side-link ${nav eq 'tickets' ? 'active' : ''}" href="${ctx}/admin/tickets.action"><i class="ri-coupon-3-line"></i>工单管理</a>
+                <a class="side-link ${nav eq 'users' ? 'active' : ''}" href="${ctx}/admin/users.action"><i class="ri-team-line"></i>用户管理</a>
+            </c:when>
+            <c:otherwise>
+                <div class="group">客服中心</div>
+                <a class="side-link ${nav eq 'workbench' ? 'active' : ''}" href="${ctx}/agent/workbench.action"><i class="ri-customer-service-2-line"></i>客服工作台<span class="badge hidden" id="queueBadge">0</span></a>
+                <a class="side-link ${nav eq 'tickets' ? 'active' : ''}" href="${ctx}/agent/tickets.action"><i class="ri-coupon-3-line"></i>我的工单</a>
+            </c:otherwise>
+        </c:choose>
+        <div class="me">
+            <span class="avatar" style="background:${me.avatarColor}"><c:out value="${me.initial}"/></span>
+            <div class="flex-1"><b class="ellipsis"><s:property value="#session.loginUser.nickname"/></b><small><span class="dot dot-on"></span> ${me.roleText}在线</small></div>
+            <a class="icon-btn" href="${ctx}/logout.action" title="退出登录"><i class="ri-logout-box-r-line"></i></a>
+        </div>
+    </aside>
+    <main class="a-main">

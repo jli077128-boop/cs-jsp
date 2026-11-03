@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 6.0//EN"
+        "https://struts.apache.org/dtds/struts-6.0.dtd">
+<!--
+  智服 AI —— Struts 2（6.x，javax / Java EE 8）核心配置
+  URL 规则：/命名空间/动作名.action，例如 /user/home.action、/admin/kb_articleSave.action、/api/chat/ask.action
+  包结构：
+    cs-default（抽象）  公共：自定义拦截器 + 拦截器栈、全局结果、全局异常映射
+    public   /          登录、注册、退出（不需要登录）
+    user     /user      普通用户页面        userStack  （auth role=USER  + defaultStack）
+    ticket   /ticket    工单详情（三种角色） loginStack （auth role=ANY   + defaultStack）
+    agent    /agent     客服页面            agentStack （auth role=AGENT + defaultStack）
+    admin    /admin     管理员页面          adminStack （auth role=ADMIN + defaultStack）
+    api-chat /api/chat  用户 Ajax 接口      json 结果
+    api-agent/api/agent 客服 Ajax 接口      json 结果
+    api-admin/api/admin 管理员 Ajax 接口    json 结果
+-->
+<struts>
+    <!-- ===== 常量 ===== -->
+    <!-- 关闭开发模式（上线 / 演示都用 false；调试 OGNL 时可临时改成 true） -->
+    <constant name="struts.devMode" value="false"/>
+    <!-- 请求后缀：只有 *.action 交给 Struts，JSP / 静态资源 / WebSocket 不受影响 -->
+    <constant name="struts.action.extension" value="action"/>
+    <constant name="struts.i18n.encoding" value="UTF-8"/>
+    <!-- 全局主题 simple：标签只输出原生 HTML，样式完全由 app.css 控制（保持原来的极光玻璃风格） -->
+    <constant name="struts.ui.theme" value="simple"/>
+    <!-- 国际化资源：校验 / 类型转换错误提示（src/main/resources/messages.properties） -->
+    <constant name="struts.custom.i18n.resources" value="messages"/>
+    <!-- 关闭动态方法调用（action!method），改用通配符 + allowed-methods（严格方法调用 SMI） -->
+    <constant name="struts.enable.DynamicMethodInvocation" value="false"/>
+
+    <!-- ===== 公共父包（抽象）：继承 json-default（json-default 继承 struts-default），这样所有子包都能用 type="json" ===== -->
+    <package name="cs-default" extends="json-default" abstract="true">
+        <interceptors>
+            <!-- 自定义登录 / 角色拦截器 -->
+            <interceptor name="auth" class="com.kmu.cs.interceptor.AuthInterceptor"/>
+            <!-- 只要求登录 -->
+            <interceptor-stack name="loginStack">
+                <interceptor-ref name="auth"><param name="role">ANY</param></interceptor-ref>
+                <interceptor-ref name="defaultStack"/>
+            </interceptor-stack>
+            <interceptor-stack name="userStack">
+                <interceptor-ref name="auth"><param name="role">USER</param></interceptor-ref>
+                <interceptor-ref name="defaultStack"/>
+            </interceptor-stack>
+            <interceptor-stack name="agentStack">
+                <interceptor-ref name="auth"><param name="role">AGENT</param></interceptor-ref>
+                <interceptor-ref name="defaultStack"/>
+            </interceptor-stack>
+            <interceptor-stack name="adminStack">
+                <interceptor-ref name="auth"><param name="role">ADMIN</param></interceptor-ref>
+                <interceptor-ref name="defaultStack"/>
+            </interceptor-stack>
+        </interceptors>
+
+        <default-interceptor-ref name="defaultStack"/>
+
+        <!-- 全局结果：任何 Action 返回这些结果名都会用到 -->
+        <global-results>
+            <!-- 未登录：重定向到登录页，并带上原地址（OGNL 读取 BaseAction.getBackUrl()） -->
+            <result name="login" type="redirectAction">
+                <param name="namespace">/</param>
+                <param name="actionName">login</param>
+                <param name="redirect">${backUrl}</param>
+                <param name="suppressEmptyParameters">true</param>
+            </result>
+            <!-- 角色不符：403 页面 -->
+            <result name="forbidden">/WEB-INF/jsp/error/403.jsp</result>
+            <!-- 资源不存在 / 无权查看：404 页面 -->
+            <result name="notfound">/WEB-INF/jsp/error/404.jsp</result>
+            <!-- 参数类型错误（如 id=abc）等返回 input 但 Action 没有配置 input 结果时 -->
+            <result name="input">/WEB-INF/jsp/error/400.jsp</result>
+            <!-- 未捕获异常：500 页面 -->
+            <result name="error">/WEB-INF/jsp/error/500.jsp</result>
+        </global-results>
+
+        <!-- 全局异常映射：exception 拦截器捕获后返回 error 结果，页面可用 <s:property value="exception.message"/> -->
+        <global-exception-mappings>
+            <exception-mapping exception="java.lang.Exception" result="error"/>
+        </global-exception-mappings>
+    </package>
+
+    <!-- ===== 公共（不需要登录） ===== -->
+    <package name="public" namespace="/" extends="cs-default">
+        <!-- 参数接收方式一：Action 属性（username / password） -->
+        <action name="login" class="com.kmu.cs.action.LoginAction">
+            <result name="input">/WEB-INF/jsp/login.jsp</result>
+            <result name="success" type="redirect">${target}</result>
+        </action>
+        <action name="logout" class="com.kmu.cs.action.LogoutAction">
+            <result name="success" type="redirectAction">login</result>
+        </action>
+        <!-- 参数接收方式二：域模型 user.xxx；输入校验 RegisterAction-validation.xml + validate() -->
+        <action name="registerForm" class="com.kmu.cs.action.RegisterAction" method="input">
+            <result name="input">/WEB-INF/jsp/register.jsp</result>
+        </action>
+        <action name="register" class="com.kmu.cs.action.RegisterAction">
+            <result name="input">/WEB-INF/jsp/register.jsp</result>
+            <result name="success" type="redirectAction">
+                <param name="actionName">login</param>
+                <param name="u">${user.username}</param>
+            </result>
+        </action>
+    </package>
+
+    <!-- ===== 普通用户 ===== -->
+    <package name="user" namespace="/user" extends="cs-default">
+        <default-interceptor-ref name="userStack"/>
+        <action name="home" class="com.kmu.cs.action.UserHomeAction">
+            <result>/WEB-INF/jsp/user/home.jsp</result>
+        </action>
+        <action name="chat" class="com.kmu.cs.action.ChatAction">
+            <result>/WEB-INF/jsp/user/chat.jsp</result>
+        </action>
+        <action name="kb" class="com.kmu.cs.action.KnowledgeAction">
+            <result>/WEB-INF/jsp/user/kb.jsp</result>
+        </action>
+        <action name="kbDetail" class="com.kmu.cs.action.KnowledgeAction" method="detail">
+            <result>/WEB-INF/jsp/user/kb-detail.jsp</result>
+        </action>
+        <action name="tickets" class="com.kmu.cs.action.TicketAction">
+            <result>/WEB-INF/jsp/user/tickets.jsp</result>
+        </action>
+        <!-- 参数接收方式三：ModelDriven<Ticket> -->
+        <action name="ticketNew" class="com.kmu.cs.action.TicketCreateAction" method="input">
+            <result name="input">/WEB-INF/jsp/user/ticket-new.jsp</result>
+        </action>
+        <action name="ticketSave" class="com.kmu.cs.action.TicketCreateAction">
+            <result name="input">/WEB-INF/jsp/user/ticket-new.jsp</result>
+            <result name="success" type="redirectAction">
+                <param name="namespace">/ticket</param>
+                <param name="actionName">detail</param>
+                <param name="id">${newId}</param>
+            </result>
+        </action>
+    </package>
+
+    <!-- ===== 工单详情：三种角色共用，登录即可 ===== -->
+    <package name="ticket" namespace="/ticket" extends="cs-default">
+        <default-interceptor-ref name="loginStack"/>
+        <action name="detail" class="com.kmu.cs.action.TicketDetailAction" method="detail">
+            <result>/WEB-INF/jsp/ticket-detail.jsp</result>
+        </action>
+        <action name="update" class="com.kmu.cs.action.TicketDetailAction" method="update">
+            <result type="redirectAction">
+                <param name="actionName">detail</param>
+                <param name="id">${id}</param>
+            </result>
+        </action>
+    </package>
+
+    <!-- ===== 客服 ===== -->
+    <package name="agent" namespace="/agent" extends="cs-default">
+        <default-interceptor-ref name="agentStack"/>
+        <action name="workbench" class="com.kmu.cs.action.AgentAction">
+            <result>/WEB-INF/jsp/agent/workbench.jsp</result>
+        </action>
+        <action name="tickets" class="com.kmu.cs.action.AgentAction" method="tickets">
+            <result>/WEB-INF/jsp/agent/tickets.jsp</result>
+        </action>
+    </package>
+
+    <!-- ===== 管理员 ===== -->
+    <package name="admin" namespace="/admin" extends="cs-default">
+        <default-interceptor-ref name="adminStack"/>
+        <action name="dashboard" class="com.kmu.cs.action.AdminDashboardAction">
+            <result>/WEB-INF/jsp/admin/dashboard.jsp</result>
+        </action>
+
+        <!-- 工单管理：日期范围筛选使用自定义类型转换器 DateConverter；格式错误返回 input -->
+        <action name="tickets" class="com.kmu.cs.action.AdminTicketAction">
+            <result>/WEB-INF/jsp/admin/tickets.jsp</result>
+            <result name="input">/WEB-INF/jsp/admin/tickets.jsp</result>
+        </action>
+        <action name="ticketAssign" class="com.kmu.cs.action.AdminTicketAction" method="assign">
+            <result type="redirectAction">
+                <param name="actionName">tickets</param>
+                <param name="status">${backStatus}</param>
+                <param name="suppressEmptyParameters">true</param>
+            </result>
+        </action>
+
+        <!-- 用户管理：通配符 user_* 调用同名方法，allowed-methods 声明允许的方法（严格方法调用） -->
+        <action name="users" class="com.kmu.cs.action.AdminUserAction">
+            <result>/WEB-INF/jsp/admin/users.jsp</result>
+        </action>
+        <action name="user_*" class="com.kmu.cs.action.AdminUserAction" method="{1}">
+            <result type="redirectAction">
+                <param name="actionName">users</param>
+                <param name="role">${backRole}</param>
+                <param name="suppressEmptyParameters">true</param>
+            </result>
+            <allowed-methods>add,toggle,reset</allowed-methods>
+        </action>
+
+        <!-- 知识库管理 -->
+        <action name="kb" class="com.kmu.cs.action.AdminKnowledgeAction">
+            <result>/WEB-INF/jsp/admin/kb.jsp</result>
+        </action>
+        <action name="kb_*" class="com.kmu.cs.action.AdminKnowledgeAction" method="{1}">
+            <result type="redirect">${returnUrl}</result>
+            <allowed-methods>articleSave,articleToggle,articleDelete,categorySave,categoryDelete</allowed-methods>
+        </action>
+
+        <!-- 批量新增问答：List<KbArticle> 批量参数接收（对应 customerBatch.jsp） -->
+        <action name="kbBatchForm" class="com.kmu.cs.action.AdminKbBatchAction" method="input">
+            <result name="input">/WEB-INF/jsp/admin/kb-batch.jsp</result>
+        </action>
+        <action name="kbBatch" class="com.kmu.cs.action.AdminKbBatchAction">
+            <result name="input">/WEB-INF/jsp/admin/kb-batch.jsp</result>
+            <result name="success" type="redirectAction">kb</result>
+        </action>
+    </package>
+
+    <!-- ===== Ajax 接口（json 结果，root=result → {code,msg,data}） ===== -->
+    <package name="api-chat" namespace="/api/chat" extends="cs-default">
+        <default-interceptor-ref name="userStack"/>
+        <action name="*" class="com.kmu.cs.action.ChatApiAction" method="{1}">
+            <result type="json"><param name="root">result</param></result>
+            <allowed-methods>poll,sessions,ask,human,end,rate</allowed-methods>
+        </action>
+    </package>
+
+    <package name="api-agent" namespace="/api/agent" extends="cs-default">
+        <default-interceptor-ref name="agentStack"/>
+        <action name="*" class="com.kmu.cs.action.AgentApiAction" method="{1}">
+            <result type="json"><param name="root">result</param></result>
+            <allowed-methods>queue,customer,suggest,poll,accept,send,end,ticket</allowed-methods>
+        </action>
+    </package>
+
+    <package name="api-admin" namespace="/api/admin" extends="cs-default">
+        <default-interceptor-ref name="adminStack"/>
+        <action name="stats" class="com.kmu.cs.action.AdminDashboardAction" method="stats">
+            <result type="json"><param name="root">result</param></result>
+        </action>
+    </package>
+</struts>

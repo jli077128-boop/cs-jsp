@@ -1,0 +1,24 @@
+<%-- 公共头部：HTML head + 极光背景。使用前先 <c:set var="pageTitle" .../>
+     同时引入 JSTL（c:）和 Struts 2 标签库（s:），各页面可混用：EL/JSTL 读取 Action 属性靠 StrutsRequestWrapper 回退到值栈，
+     s: 标签直接用 OGNL 读取值栈（Action 属性）和上下文（#session / #parameters / #request / #attr） --%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="s" uri="/struts-tags" %>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
+<c:set var="me" value="${sessionScope.loginUser}"/>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><c:out value="${pageTitle}"/> · 智服 AI</title>
+    <link rel="icon" href="${ctx}/static/img/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="${ctx}/static/vendor/remixicon/remixicon.css">
+    <link rel="stylesheet" href="${ctx}/static/css/app.css">
+    <script>window.CTX = '${ctx}';</script>
+    <script src="${ctx}/static/js/app.js"></script>
+</head>
+<body>
+<div class="aurora" aria-hidden="true">
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+    <div class="ribbon"></div><div class="grid"></div><div class="stars"></div><div class="vignette"></div>
+</div>
